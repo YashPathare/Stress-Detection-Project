@@ -732,9 +732,9 @@ def live_stress_detection():
                                         else:
                                             display_bpm = bpm 
                                         
-                                        cv2.putText(frame, f"BPM: {display_bpm:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                                        cv2.putText(frame, f"SDNN: {sdnn:.1f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                                        cv2.putText(frame, f"RMSSD: {rmssd:.1f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                                        cv2.putText(frame, f"BPM: {display_bpm:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+                                        cv2.putText(frame, f"SDNN: {sdnn:.1f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+                                        cv2.putText(frame, f"RMSSD: {rmssd:.1f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
                                         
                             except ValueError:
                                 pass

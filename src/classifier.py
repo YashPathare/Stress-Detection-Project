@@ -9,7 +9,8 @@ import joblib
 def train_stress_classifier():
     # 1. Setup Absolute Paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(script_dir, '..', 'data', 'processed', 'stress_dataset_cleaned.csv')
+    # Using the biologically corrected dataset!
+    data_path = os.path.join(script_dir, '..', 'data', 'processed', 'corrected_stress_dataset.csv')
     models_dir = os.path.join(script_dir, '..', 'models')
     
     # Ensure the models directory exists
@@ -20,11 +21,12 @@ def train_stress_classifier():
     try:
         df = pd.read_csv(data_path)
     except FileNotFoundError:
-        print("Error: Could not find 'stress_dataset_cleaned.csv'. Ensure it is in the data/processed folder.")
+        # Fixed the typo in the error message
+        print("Error: Could not find 'corrected_stress_dataset.csv'. Ensure it is in the data/processed folder.")
         return
         
     # 3. Prepare Features (X) and Target Labels (y)
-    # We drop the timestamp because time of day doesn't cause stress, the physiology does!
+    # Sticking to the 3 core metrics extracted by your face_detection.py script
     X = df[['bpm', 'sdnn', 'rmssd']]
     y = df['label']
     
