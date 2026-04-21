@@ -20,7 +20,7 @@ def train_model():
         # FIX: If the cleaning script deleted the header, add it back manually!
         if 'bpm' not in df.columns:
             print("No header detected. Applying column names manually...")
-            df = pd.read_csv(data_path, header=None, names=['timestamp', 'bpm', 'sdnn', 'rmssd', 'pnn50', 'label'])
+            df = pd.read_csv(data_path, header=None, names=['timestamp', 'bpm', 'sdnn', 'rmssd', 'pnn50(%)', 'label'])
             
     except FileNotFoundError:
         print("Error: clean_real_stress_dataset.csv not found!")
@@ -30,7 +30,7 @@ def train_model():
     df = df.dropna()
 
     # THE 4 CLINICAL FEATURES
-    X = df[['bpm', 'sdnn', 'rmssd', 'pnn50']]
+    X = df[['bpm', 'sdnn', 'rmssd', 'pnn50(%)']]
     y = df['label']
 
     print("Splitting data into 80% Training and 20% Testing...")
