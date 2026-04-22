@@ -213,29 +213,18 @@ function App() {
 
   useEffect(() => {
     wsRef.current = new WebSocket('ws://localhost:8000/ws/stress-engine');
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setMetrics(data);
-    };
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      })
-      .catch((err) => console.error("Camera error:", err));
 
-// ... keep the navigator.mediaDevices block the same ...
-
-    // UPGRADED: Real-time 30FPS Engine with dynamic Aspect Ratio
-    const interval = setInterval(() => {
+    // 1. Create a dedicated function to grab and send exactly ONE frame
+    const sendNextFrame = () => {
       if (videoRef.current && hiddenCanvasRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         const video = videoRef.current;
         
-        // Only draw if the camera has fully booted and knows its own resolution
+        // Only draw if the camera has fully booted
         if (video.videoWidth > 0) {
           const canvas = hiddenCanvasRef.current;
           const context = canvas.getContext('2d');
           
-          // Lock the canvas to the exact aspect ratio of your specific webcam
+          // Lock the canvas to the exact aspect ratio
           const aspect = video.videoWidth / video.videoHeight;
           canvas.width = 480; 
           canvas.height = 480 / aspect; 
@@ -243,11 +232,40 @@ function App() {
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           const base64Frame = canvas.toDataURL('image/jpeg', 0.5);
           wsRef.current.send(base64Frame);
+        } else {
+          // If camera isn't ready, check again in 50ms
+          setTimeout(sendNextFrame, 50); 
         }
       }
-    }, 33); // 33ms = 30 Frames Per Second for zero lag
+    };
 
-    return () => clearInterval(interval);
+    // 2. Start the loop the exact millisecond the WebSocket opens
+    wsRef.current.onopen = () => {
+      sendNextFrame();
+    };
+
+    // 3. The Ping-Pong Loop: Receive Data -> Update UI -> Send Next Frame
+    wsRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setMetrics(data);
+      
+      // INSTANTLY send the next frame synced to the monitor's refresh rate
+      requestAnimationFrame(sendNextFrame); 
+    };
+
+    // Boot up the camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      })
+      .catch((err) => console.error("Camera error:", err));
+
+    // Cleanup when component unmounts
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
   }, []);
 
   useEffect(() => {

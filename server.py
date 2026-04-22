@@ -121,10 +121,24 @@ async def stress_endpoint(websocket: WebSocket):
                             
             # ... (keep the buffer management and math pipeline the same) ...
             else:
-                # Keep buffer stable if user moves their head too fast
-                if len(raw_signal) > 0:
-                    raw_signal.append(raw_signal[-1])
-                    timestamps.append(time.time())
+                # THE FIX: Camera covered or face lost
+                # 1. Clear the box history
+                prev_box = None 
+                
+                # 2. Destroy the signal arrays so math instantly stops
+                raw_signal.clear() 
+                timestamps.clear()
+                live_wave.clear()
+                
+                # 3. Wipe the smoothing history so old data doesn't ruin the next scan
+                bpm_history.clear()
+                sdnn_history.clear()
+                rmssd_history.clear()
+                pnn50_history.clear()
+                
+                # 4. Force the UI to reset
+                display_bpm, display_sdnn, display_rmssd, display_pnn50 = "--", "--", "--", "--"
+                status_text = "FACE LOST - WAITING"
 
             # Manage Buffer Size
             if len(raw_signal) > BUFFER_SIZE:
@@ -206,7 +220,7 @@ async def stress_endpoint(websocket: WebSocket):
                 "sdnn": display_sdnn,
                 "rmssd": display_rmssd,
                 "pnn50": display_pnn50,
-                "status": status_text if progress == 100 else f"BUFFERING {int(progress)}%",
+                "status": status_text if (progress == 100 or "FACE LOST" in status_text) else f"BUFFERING {int(progress)}%",
                 "progress": progress,
                 "graphData": live_wave,
                 "box": box_data  # NEW: Send the coordinates to React!
